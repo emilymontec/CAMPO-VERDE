@@ -4,6 +4,20 @@ from django.db import models
 from django.contrib.auth.models import User
 from products.models import Product
 
+class ShippingZone(models.Model):
+    name = models.CharField(max_length=100)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    active = models.BooleanField(default=True)
+    notes = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = "Zona de Envío"
+        verbose_name_plural = "Zonas de Envío"
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.name} (${self.cost})"
+
 
 class Order(models.Model):
 

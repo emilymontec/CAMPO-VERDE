@@ -122,8 +122,38 @@
                 </div>
 
                 <div class="bg-light rounded-4 p-3 my-4 border border-dashed text-center">
-                    <p class="small text-muted mb-0">🌱 Estás apoyando a <strong>3 familias</strong> de agricultores
-                        locales con este pedido.</p>
+                    <form action="{% url 'set_shipping_options' %}" method="post" class="text-start">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted d-block mb-2">Modalidad de entrega</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="method" id="m_delivery" value="delivery" {% if shipping_opts.method != 'pickup' %}checked{% endif %}>
+                                    <label class="form-check-label small" for="m_delivery">Domicilio</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="method" id="m_pickup" value="pickup" {% if shipping_opts.method == 'pickup' %}checked{% endif %}>
+                                    <label class="form-check-label small" for="m_pickup">Recoger en punto</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="zone_wrap" class="mb-3" {% if shipping_opts.method == 'pickup' %}style="display:none"{% endif %}>
+                            <label class="small fw-bold text-muted d-block mb-2">Zona (Área Metropolitana del Atlántico)</label>
+                            <select class="form-select" name="zone_id">
+                                <option value="">Tarifa estándar</option>
+                                {% for z in zones %}
+                                  <option value="{{ z.id }}" {% if shipping_opts.zone_id|default:'' == z.id|stringformat:'s' %}selected{% endif %}>{{ z.name }} - ${{ z.cost }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div id="addr_wrap" class="mb-3" {% if shipping_opts.method == 'pickup' %}style="display:none"{% endif %}>
+                            <label class="small fw-bold text-muted d-block mb-2">Dirección (si es domicilio)</label>
+                            <input class="form-control" type="text" name="address" value="{{ shipping_opts.address|default:'' }}" placeholder="Barrio, calle, referencia">
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn-round py-2 bg-cream fw-800" style="color: var(--farm-green); border: 2px solid var(--farm-green);">Actualizar envío</button>
+                        </div>
+                    </form>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-4 pt-2 border-top">
@@ -166,5 +196,22 @@
     .uppercase {
         text-transform: uppercase;
     }
+    #zone_wrap[style*="display:none"], #addr_wrap[style*="display:none"] { opacity: 0.6; }
+    /* Optional: simple client-side toggle */
+    document.addEventListener('DOMContentLoaded', () => {
+      const md = document.getElementById('m_delivery');
+      const mp = document.getElementById('m_pickup');
+      const zw = document.getElementById('zone_wrap');
+      const aw = document.getElementById('addr_wrap');
+      if (md && mp && zw && aw) {
+        const sync = () => {
+          const show = md.checked;
+          zw.style.display = show ? '' : 'none';
+          aw.style.display = show ? '' : 'none';
+        };
+        md.addEventListener('change', sync);
+        mp.addEventListener('change', sync);
+      }
+    });
 </style>
 {% endblock %}
